@@ -1,0 +1,16 @@
+# Enrollment — written once by admin during setup (spec §5).
+[enrollment]
+pci_address = "0000:00:14.0"
+vendor_id = "8086"
+device_id = "7ae0"
+hw_identity = "REPLACE-ME"
+driver = "xhci_hcd"
+
+mode = "observe"  # observe | notify | automatic
+detection_window_secs = 60
+min_cmd_timeouts = 2
+evidence_freshness_secs = 15
+verify_window_secs = 30
+cooldown_secs = 1800
+max_attempts_per_24h = 2
+omarchy_widget = true

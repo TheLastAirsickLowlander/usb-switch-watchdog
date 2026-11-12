@@ -1,0 +1,9 @@
+[package]
+name = "usb-watchdogd"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+wdog-core.workspace = true
+anyhow.workspace = true
+tokio.workspace = true

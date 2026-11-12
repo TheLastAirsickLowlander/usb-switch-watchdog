@@ -1,0 +1,9 @@
+[package]
+name = "wdog-recover"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+wdog-core.workspace = true
+anyhow.workspace = true
+tokio.workspace = true

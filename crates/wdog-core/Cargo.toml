@@ -1,0 +1,10 @@
+[package]
+name = "wdog-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono = { workspace = true }
+anyhow.workspace = true

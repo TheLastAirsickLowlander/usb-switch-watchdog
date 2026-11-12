@@ -1,0 +1,16 @@
+[Unit]
+Description=USB switch watchdog detector (observe mode)
+After=multi-user.target
+
+[Service]
+Type=simple
+User=nobody
+ExecStart=/usr/libexec/usb-switch-watchdog/usb-watchdogd
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+# Read-only journal + sysfs topology; no writes from this unit.
+ReadOnlyPaths=/sys/bus/pci /sys/bus/usb
+
+[Install]
+WantedBy=multi-user.target

@@ -93,11 +93,11 @@ Item {
     id: poll
     command: ["usb-watchdogctl", "status", "--json"]
     stdout: StdioCollector {}
-    onExited: {
+    onExited: function (exitCode) {
       if (exitCode !== 0)
         root.applyJson("");
       else
-        root.applyJson(stdout.text);
+        root.applyJson(poll.stdout.text);
       pollTimer.restart();
     }
   }

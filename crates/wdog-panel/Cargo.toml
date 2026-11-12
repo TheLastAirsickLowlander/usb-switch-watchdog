@@ -5,7 +5,8 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+serde_json.workspace = true
+wdog-core.workspace = true
 # Rune: native GPU Rust UI (https://github.com/anomalyco/rune, MIT).
-# Pre-release: pin a `dev` rev before building the panel.
-#   cargo update -p wdog-panel  # after setting rev below
-# rune = { git = "https://github.com/anomalyco/rune", rev = "<dev rev>" }
+# Pre-release: pinned to a `dev` rev; `dev` is never rewritten.
+rune = { git = "https://github.com/anomalyco/rune", rev = "4b9d4f9964a35909be798fa92a1b1a531009a31d" }

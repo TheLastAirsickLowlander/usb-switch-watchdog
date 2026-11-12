@@ -1,38 +1,39 @@
 # Omarchy bar plugin (`wdog.usb-switch`)
 
-Native Quickshell bar widget. Read-only: polls `usb-watchdogctl status
---json` every 15 s and renders one state dot. Click opens `wdog-panel`.
+Native Quickshell bar widget in first-party style: one Nerd Font USB
+glyph (`󰕓`) in the host's own colors. State lives in the tooltip and
+in the button's `active` highlight. Click opens `wdog-panel`, the Rune
+desktop app with incident history, decisions, and actions.
+
+Read-only: polls `usb-watchdogctl status --json` every 15 s. Every
+failure path (missing binary, bad JSON, daemon down) clears the
+highlight — a broken widget must never break the bar.
 
 ## Install
 
 ```bash
 cp -r omarchy-plugin ~/.config/omarchy/plugins/wdog.usb-switch
 # ensure usb-watchdogctl + wdog-panel are on PATH (cargo install)
+omarchy plugin enable wdog.usb-switch --section right
 ```
 
-Add the widget to the bar in `~/.config/omarchy/shell.json`, e.g. in
-`tray` or `right`:
-
-```json
-{ "id": "wdog.usb-switch" }
-```
-
-Then reload the shell (re-login, or whatever your build exposes —
-`omarchy bar --help` may offer move/add helpers). To move it later:
+To move it later:
 
 ```bash
 omarchy bar move wdog.usb-switch --section right
 ```
 
+Note: the shell caches widget components by URL, so editing the QML
+in place does not reload it — run `omarchy-restart-shell` after
+changing plugin files.
+
 ## States
 
-| Dot | Meaning |
+| Glyph | Meaning |
 |---|---|
-| grey | unknown — ctl missing, daemon down, or bad output |
-| blue | observe — monitoring only |
-| green | automatic — recovery armed |
-| amber | paused |
-| red | last recovery failed/stalled, needs review |
+| plain | monitoring (observe/automatic) or unknown |
+| highlighted | needs attention: paused, failed/stalled, or reset in progress |
+| tooltip | mode, automation, last outcome, present-tense activity |
 
-Anything the widget doesn't understand renders grey. A broken widget
+Anything the widget doesn't understand renders plain. A broken widget
 must never break the bar.

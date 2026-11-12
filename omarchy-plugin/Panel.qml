@@ -1,60 +1,35 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import qs.Commons as Commons
+import qs.Commons
+import qs.Ui
 
-// Bar widget for the USB switch watchdog. Read-only: it polls
-// `usb-watchdogctl status --json` and renders one state dot. Every
-// failure path (missing binary, bad JSON, daemon down) lands on
-// "unknown" — a broken widget must never break the bar.
-Item {
+// Bar widget for the USB switch watchdog, in first-party style: one
+// Nerd Font glyph in the host's own colors. State lives in the tooltip
+// and in the `active` highlight, never in custom colors or text labels.
+// Read-only: polls `usb-watchdogctl status --json`. Every failure path
+// (missing binary, bad JSON, daemon down) clears the highlight — a broken
+// widget must never break the bar.
+// Root is Ui.Panel like other third-party bar widgets (omdrop); BarWidget
+// is first-party-only and rejects custom properties from plugins.
+Panel {
   id: root
-
-  // Configurable via the plugin schema.
+  moduleName: "wdog.usb-switch"
+  // Overridable via the plugin schema.
   property int pollSeconds: 15
 
   // unknown | observe | auto | active | paused | incident
   property string wstate: "unknown"
   property string detail: "watchdog state unknown"
 
-  implicitWidth: row.width
-  implicitHeight: row.height
 
-  Row {
-    id: row
-    spacing: 6
+  implicitWidth: button.implicitWidth
+  implicitHeight: button.implicitHeight
 
-    Rectangle {
-      id: dot
-      anchors.verticalCenter: parent.verticalCenter
-      width: 9
-      height: 9
-      radius: 4.5
-      color: {
-        switch (root.wstate) {
-        case "observe": return "#7aa2f7";
-        case "auto": return "#9ece6a";
-        case "active": return "#9ece6a";
-        case "paused": return "#e0af68";
-        case "incident": return "#f7768e";
-        default: return "#888888";
-        }
-      }
-      // A reset is underway: pulse so it reads as activity, not state.
-      SequentialAnimation on opacity {
-        running: root.wstate === "active"
-        loops: Animation.Infinite
-        NumberAnimation { to: 0.35; duration: 500; easing.type: Easing.InOutSine }
-        NumberAnimation { to: 1.0; duration: 500; easing.type: Easing.InOutSine }
-      }
-    }
-
-    Text {
-      anchors.verticalCenter: parent.verticalCenter
-      text: "USB"
-      color: Commons.Color.foreground
-    }
-  }
+  // Lit only when the watchdog wants attention: paused, failed/stalled,
+  // or a reset in progress. Steady states stay the plain bar glyph.
+  readonly property bool needsAttention:
+    wstate === "paused" || wstate === "incident" || wstate === "active"
 
   function applyJson(text) {
     var doc;
@@ -65,27 +40,30 @@ Item {
       root.detail = "unparseable status";
       return;
     }
-    if (doc.schema !== 1 || !doc.mode) {
+    if (!doc || doc.schema !== 1 || !doc.mode) {
       root.wstate = "unknown";
       root.detail = "unsupported status schema";
       return;
     }
+    var summary = "mode " + doc.mode + ", automation " + doc.automation;
+    if (doc.last_outcome)
+      summary += ", last " + doc.last_outcome;
     if (doc.activity === "recovering") {
       root.wstate = "active";
       root.detail = "reset in progress — devices will briefly drop";
     } else if (doc.paused) {
       root.wstate = "paused";
-      root.detail = "automatic recovery paused";
+      root.detail = "automatic recovery paused (" + summary + ")";
     } else if (doc.last_outcome === "failed" || doc.last_outcome === "stalled"
         || doc.automation === "disabled-failure") {
       root.wstate = "incident";
-      root.detail = "last recovery " + doc.last_outcome;
+      root.detail = "needs review (" + summary + ")";
     } else if (doc.mode === "automatic") {
       root.wstate = "auto";
-      root.detail = "monitoring, automatic recovery armed";
+      root.detail = "monitoring, recovery armed (" + summary + ")";
     } else {
       root.wstate = "observe";
-      root.detail = "monitoring only, no automatic reset";
+      root.detail = "monitoring only (" + summary + ")";
     }
   }
 
@@ -115,10 +93,18 @@ Item {
     command: ["wdog-panel"]
   }
 
-  MouseArea {
+  BarIconButton {
+    id: button
     anchors.fill: parent
-    acceptedButtons: Qt.LeftButton
-    onClicked: launcher.running = true
+    bar: root.bar
+    // Material Design "usb" glyph, same icon font as the other bar icons.
+    text: "󰕓"
+    active: root.needsAttention
+    tooltipText: "USB watchdog: " + root.detail
+    onPressed: function (buttonCode) {
+      if (buttonCode === Qt.LeftButton)
+        launcher.running = true;
+    }
   }
 
   Component.onCompleted: poll.running = true

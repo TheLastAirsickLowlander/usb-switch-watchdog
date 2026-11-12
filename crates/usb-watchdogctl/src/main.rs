@@ -28,6 +28,13 @@ enum Cmd {
         #[arg(long)]
         id: Option<String>,
     },
+    /// Emit a test notification via the same path recovery uses (§8.4).
+    Notify {
+        #[arg(long, default_value = "USB watchdog: test notification")]
+        summary: String,
+        #[arg(long, default_value = "Notification path works.")]
+        body: String,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -50,6 +57,12 @@ fn main() -> anyhow::Result<()> {
         Cmd::Recover => println!("manual recovery requested (safety checks apply)"),
         Cmd::Export { id } => {
             println!("{{\"id\": {:?}, \"note\": \"allowlisted export only\"}}", id)
+        }
+        Cmd::Notify { summary, body } => {
+            wdog_core::notify::send(&summary, &body, wdog_core::notify::Urgency::Normal);
+            // Give the fire-and-forget thread a moment before process exit.
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            println!("notification sent");
         }
     }
     Ok(())

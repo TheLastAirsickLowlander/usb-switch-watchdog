@@ -12,7 +12,18 @@ fn main() -> anyhow::Result<()> {
     // attempt budget, pre-reset snapshot, unbind/bind, verify window.
     let snap = TopologySnapshot::default();
     let report = safety::check(&snap);
-    println!("wdog-recover: pre-flight decision: {:?}", report.decision);
-    println!("(default snapshot mismatches enrollment; refusing — correct)");
+    match &report.decision {
+        wdog_core::SafetyDecision::Allow => {
+            // Real path (phase-2 fills in unbind/bind between these):
+            wdog_core::notify::recovery_starting();
+            println!("wdog-recover: starting reset (notify banner sent)");
+            // ... unbind, bind, verify ...
+            wdog_core::notify::recovery_done("recovered-provisionally", true);
+        }
+        wdog_core::SafetyDecision::Block { reason } => {
+            println!("wdog-recover: pre-flight decision: Block({reason:?}); refusing");
+            wdog_core::notify::recovery_blocked(reason);
+        }
+    }
     Ok(())
 }

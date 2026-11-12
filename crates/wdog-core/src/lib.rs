@@ -8,6 +8,7 @@ pub mod detection;
 pub mod export;
 pub mod safety;
 pub mod status;
+pub mod notify;
 
 pub use config::{Config, Enrollment, RecoveryMode};
 pub use detection::{Detector, DetectorEvent, IncidentCandidate};

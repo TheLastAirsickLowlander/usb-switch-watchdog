@@ -13,7 +13,7 @@ Item {
   // Configurable via the plugin schema.
   property int pollSeconds: 15
 
-  // unknown | observe | auto | paused | incident
+  // unknown | observe | auto | active | paused | incident
   property string wstate: "unknown"
   property string detail: "watchdog state unknown"
 
@@ -34,10 +34,18 @@ Item {
         switch (root.wstate) {
         case "observe": return "#7aa2f7";
         case "auto": return "#9ece6a";
+        case "active": return "#9ece6a";
         case "paused": return "#e0af68";
         case "incident": return "#f7768e";
         default: return "#888888";
         }
+      }
+      // A reset is underway: pulse so it reads as activity, not state.
+      SequentialAnimation on opacity {
+        running: root.wstate === "active"
+        loops: Animation.Infinite
+        NumberAnimation { to: 0.35; duration: 500; easing.type: Easing.InOutSine }
+        NumberAnimation { to: 1.0; duration: 500; easing.type: Easing.InOutSine }
       }
     }
 
@@ -62,7 +70,10 @@ Item {
       root.detail = "unsupported status schema";
       return;
     }
-    if (doc.paused) {
+    if (doc.activity === "recovering") {
+      root.wstate = "active";
+      root.detail = "reset in progress — devices will briefly drop";
+    } else if (doc.paused) {
       root.wstate = "paused";
       root.detail = "automatic recovery paused";
     } else if (doc.last_outcome === "failed" || doc.last_outcome === "stalled"
@@ -107,7 +118,6 @@ Item {
   MouseArea {
     anchors.fill: parent
     acceptedButtons: Qt.LeftButton
-    accessible.name: "USB watchdog: " + root.detail
     onClicked: launcher.running = true
   }
 

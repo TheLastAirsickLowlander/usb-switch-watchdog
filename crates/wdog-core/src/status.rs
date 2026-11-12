@@ -18,6 +18,8 @@ pub struct StatusDoc {
     pub automation: String,
     pub incidents_24h: u32,
     pub last_outcome: Option<String>,
+    /// Present-tense activity, e.g. `recovering`. Drives the widget dot.
+    pub activity: Option<String>,
 }
 
 impl StatusDoc {
@@ -31,6 +33,7 @@ impl StatusDoc {
             automation: "disabled-observe".into(),
             incidents_24h: 0,
             last_outcome: None,
+            activity: None,
         }
     }
 }
@@ -47,8 +50,8 @@ mod tests {
         keys.sort();
         assert_eq!(
             keys,
-            ["automation", "driver", "enrolled_pci", "incidents_24h", "last_outcome",
-                "mode", "paused", "schema"]
+            ["activity", "automation", "driver", "enrolled_pci", "incidents_24h",
+                "last_outcome", "mode", "paused", "schema"]
         );
         let raw = serde_json::to_string(&doc).unwrap();
         for banned in ["serial", "home/", "machine-id", "boot-id", "192.168."] {

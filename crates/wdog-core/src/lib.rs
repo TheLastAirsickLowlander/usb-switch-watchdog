@@ -7,7 +7,10 @@ pub mod config;
 pub mod detection;
 pub mod export;
 pub mod safety;
+pub mod status;
 
 pub use config::{Config, Enrollment, RecoveryMode};
 pub use detection::{Detector, DetectorEvent, IncidentCandidate};
+pub use export::PublicIncident;
 pub use safety::{SafetyDecision, SafetyReport};
+pub use status::StatusDoc;
